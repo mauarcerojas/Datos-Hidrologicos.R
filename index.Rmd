@@ -1,0 +1,140 @@
+---
+title: "DatosHid.R"
+author: "Mauricio Arce"
+date: "24/5/2021"
+output: html_document
+---
+
+```{r}
+# Datos Hidrologicos ejercisio explorativo
+# Importar los datos a R
+inp <- read.csv("FDC.csv", na.strings = "")
+```
+
+
+# Datos Hidrologicos ejercisio explorativo
+### Importar los datos a R
+inp <- read.csv("FDC.csv", na.strings = "")
+
+### Estructura y dimensión del archivo
+head(inp)
+dim(inp)
+inp[!complete.cases(inp),]
+
+```{r}
+# Estructura y dimensión del archivo
+head(inp)
+dim(inp)
+inp[!complete.cases(inp),]
+```
+### Análisis de un Hidrograma
+```{r}
+# Análisis de un Hidrograma
+plot(inp[,2], type = "l", col="blue", 
+     main='Volumenes de agua por tiempo en ríos Estrella y Banano', 
+     xlab='Fecha', ylab='Caudal(mm x día)')
+lines(inp[,3], col="green")
+```
+
+### Resumen de los datos
+```{r}
+# Resumen de los datos
+summary(inp[,2:3])
+```
+
+### Histograma del Río Estrella 
+```{r}
+# Histograma del Río Estrella
+hist(inp[,2], col="red",
+     main='Histograma de río Estrella', ylab='Caudal(mm x dia)',
+     xlab='Valor absoluto',
+)
+```
+
+### Histograma del Río Banano
+```{r}
+# Histograma del Río Banano
+hist(inp[,3], col="purple",
+     main='Histograma de río Banano',
+     ylab='Caudal(mm x dia)',
+     xlab='Valor absoluto'
+)
+```
+
+
+### Función attach
+```{r}
+# Se trabaja directamente con los nombres, atráves de la función attach
+
+names(inp) <- c("fecha", "Estrella", "Banano")
+attach(inp)
+```
+
+
+### Grafico de río Estrella
+```{r}
+# Grafico de Río Estrella
+plot(Estrella, col="red", xlab='serie de tiempo',
+     main='Río Estrella'
+)
+```
+
+
+### Definición del formato de la fecha de tiempo
+```{r}
+Temdate <- strptime(inp[,1], format = "%d/%m/%Y")
+```
+
+
+### Funciones apply para agregar promedios  
+#### Unión y exportación del archivo en formato csv
+```{r}
+MAQ_Estrella <- tapply(Estrella, format(Temdate, format="%Y"), FUN=sum)
+MAQ_Banano <- tapply(Banano, format(Temdate, format="%Y"), FUN=sum)
+write.csv(rbind(MAQ_Estrella,MAQ_Banano), file="MAQ.csv")
+```
+
+
+## [Maximum Annual Quantity](http://www.fao.org/3/T0537S/T0537S03.htm)
+### Grafico de comparación anual
+```{r}
+# Maximum Annual Quantity
+# Grafico de comparación anual
+plot(MAQ_Banano, ylim=c(100,3000),
+     main='Comparación anual de los caudales Estrella y Banano',
+     xlab='serie de tiempo')
+lines(MAQ_Estrella, col=2)
+
+```
+
+
+### Regimen mensual del caudal
+```{r}
+# Regimen mensual del caudal
+MMQ_Estrella <- tapply(Estrella, format(Temdate, format="%m"), FUN=sum)
+MMQ_Banano <- tapply(Banano, format(Temdate, format="%m"), FUN=sum)
+```
+
+
+### Análisi de correlación
+```{r}
+# Analisis de correlación
+corinp <- cor(Estrella, Banano, method="spearman")
+corinp <- cor(inp[,2:3], method = "spearman")
+```
+
+
+### Gráfico de comparación mensual
+```{r}
+# Grafico de comparación mensual
+plot(Estrella, Banano, main='Analisis de correlación',
+     col=3,
+)
+```
+
+### Modelo de regresión lineal
+```{r}
+inp.lm <- lm(inp[,2] ~ inp[,3], data=inp)
+summary(inp.lm)
+plot(inp.lm)
+```
